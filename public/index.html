@@ -89,7 +89,7 @@ li {
 <script id="item-list-template" type="text/x-handlebars-template">
 <ul class="item-list">
     {{#each items}}
-    <li data-id="{{ id }}{{ _id }}">
+    <li data-id="{{ id }}{{ _id }}" data-userid="{{ userId }}{{ _userId }}">
         <div class="display">
             <span class="name">{{name}}</span>
             <div class="delete">
@@ -156,15 +156,16 @@ ShoppingList.prototype.onEditItemSubmit = function(event) {
     input.blur();
 };
 ShoppingList.prototype.onEditFocusOut = function(event) {
-    var item = $(event.target).parents('li');
+    var item = $(event.target).parents('li')
     var id = item.data('id');
+    var userId = $(event.target).parents('li').data('userid');
     var display = item.children('.display');
     var form = item.children('form');
     var input = form.children('input');
     var name = display.children('.name');
     var value = input.val().trim();
     if (value != '') {
-        this.editItem(id, value);
+        this.editItem(userId, id, value);
         name.text(value);
     }
     form.attr('hidden', true);
@@ -173,7 +174,8 @@ ShoppingList.prototype.onEditFocusOut = function(event) {
 };
 ShoppingList.prototype.onDeleteItemClicked = function(event) {
     var id = $(event.target).parents('li').data('id');
-    this.deleteItem(id);
+    var userId = $(event.target).parents('li').data('userid');
+    this.deleteItem(userId, id);
 };
 ShoppingList.prototype.getItems = function() {
     var ajax = $.ajax('/items', {
@@ -192,16 +194,16 @@ ShoppingList.prototype.addItem = function(name) {
     });
     ajax.done(this.getItems.bind(this));
 };
-ShoppingList.prototype.deleteItem = function(id) {
-    var ajax = $.ajax('/items/' + id, {
+ShoppingList.prototype.deleteItem = function(userId, id) {
+    var ajax = $.ajax('/items/' + userId + '/' + id, {
         type: 'DELETE',
         dataType: 'json'
     });
     ajax.done(this.getItems.bind(this));
 };
-ShoppingList.prototype.editItem = function(id, name) {
-    var item = {'name': name, 'id': id};
-    var ajax = $.ajax('/items/' + id, {
+ShoppingList.prototype.editItem = function(userId, id, name) {
+    var item = {'name': name, 'id': id, 'userid': userId};
+    var ajax = $.ajax('/items/' + userId + '/' + id, {
         type: 'PUT',
         data: JSON.stringify(item),
         dataType: 'json',
